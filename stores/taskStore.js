@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import * as Realm from 'realm-web'
 
 export const useTaskStore = defineStore("tasks", {
   state: () => ({
@@ -23,51 +22,27 @@ export const useTaskStore = defineStore("tasks", {
   actions: {
     async fetchTasks() {
       this.loading = true;
-      const userStore = useUserStore();
-      const todos = await userStore.collection.find();
-
-      this.tasks = todos.map((t) => ({ ...t, _id: t._id.toString() }));
-      console.log(this.tasks);
+      const data = await useRealmApp().getRecords();
+      this.tasks = [...data];
       this.loading = false;
     },
     async addTask(message) {
-      const userStore = useUserStore();
-      const newTask = await userStore.collection.insertOne({
-        message,
-        isFav: false,
-      });
-      this.tasks.push({ _id: newTask.insertedId.toString(), message });
+      const newTask = await useRealmApp().addRecord(message);
+      this.tasks.push(newTask);
     },
     async deleteTask(id) {
-      const userStore = useUserStore();
-      await userStore.collection.deleteOne({ _id: new Realm.BSON.ObjectId(id) });
+      await useRealmApp().deleteRecord(id);
       this.tasks = this.tasks.filter((t) => t._id !== id);
     },
     async updateTask(id, newMessage) {
-      const userStore = useUserStore();
-      await userStore.collection.updateOne(
-        { _id: new Realm.BSON.ObjectId(id) },
-        {
-          $set: { message: newMessage },
-        }
-      );
+      await useRealmApp().updateRecord(id, newMessage);
       const task = this.tasks.find((t) => t._id === id);
       task.message = newMessage;
     },
     async toggleFavourite(id) {
-      const userStore = useUserStore();
       const task = this.tasks.find((t) => t._id === id);
       task.isFav = !task.isFav;
-      const flag = task.isFav;
-      console.log(id);
-      
-
-      await userStore.collection.updateOne(
-        { _id: new Realm.BSON.ObjectId(id) },
-        {
-          $set: { isFav: flag },
-        }
-      );
+      await useRealmApp().setFavourite(id, task.isFav);     
     },
   },
 });

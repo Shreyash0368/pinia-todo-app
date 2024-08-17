@@ -13,7 +13,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
 		public: {
 			realmAppId: process.env.NUXT_PUBLIC_REALM_APP_ID,
-			realmApiKey: "",
+			realmApiKey: process.env.NUXT_PUBLIC_REALM_API_KEY,
+      dbName: 'nuxt-training'
 		},
 	},
 });
